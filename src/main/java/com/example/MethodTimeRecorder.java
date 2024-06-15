@@ -5,14 +5,14 @@ public class MethodTimeRecorder {
     private static int callCount;
 
     public static void start() {
-        startTime = System.nanoTime();
+        startTime = System.currentTimeMillis();
     }
 
     public static void end() {
-        long endTime = System.nanoTime();
+        long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
         callCount++;
-        System.out.println("Method call #" + callCount + ": " + duration + " nanoseconds");
+        System.out.println("Method call #" + callCount + ": " + duration + " ms");
     }
 
     public static void main(String[] args) {

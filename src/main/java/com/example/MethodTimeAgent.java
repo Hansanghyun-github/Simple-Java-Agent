@@ -10,31 +10,42 @@ public class MethodTimeAgent {
         inst.addTransformer(new ClassFileTransformer() {
             @Override
             public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-                if ("com/example/YourTargetClass".replace('.', '/').equals(className)) {
-                    return transformClass(classfileBuffer);
+                if(className.startsWith("com"))
+                    System.out.println(className);
+                if(TargetList.targetList
+                        .stream().map(TargetList.Target::getClassName)
+                        .anyMatch(className::equals)) {
+                    return transformClass(classfileBuffer, className);
                 }
                 return classfileBuffer;
             }
         });
     }
 
-    private static byte[] transformClass(byte[] classfileBuffer) {
+    private static byte[] transformClass(byte[] classfileBuffer, String className) {
         ClassReader reader = new ClassReader(classfileBuffer);
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor visitor = new MethodTimeClassVisitor(Opcodes.ASM9, writer);
+        ClassVisitor visitor = new MethodTimeClassVisitor(Opcodes.ASM9, writer, className);
         reader.accept(visitor, 0);
         return writer.toByteArray();
     }
 
     static class MethodTimeClassVisitor extends ClassVisitor {
-        public MethodTimeClassVisitor(int api, ClassVisitor classVisitor) {
+        private String className;
+        public MethodTimeClassVisitor(int api, ClassVisitor classVisitor, String className) {
             super(api, classVisitor);
+            this.className = className;
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
             MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-            if (mv != null && !name.equals("<init>")) {
+            if (mv != null
+                    && !name.equals("<init>")
+                    && TargetList.targetList
+                    .stream().filter(t -> t.getClassName().equals(className))
+                    .map(TargetList.Target::getMethodName)
+                    .anyMatch(name::equals)){
                 mv = new MethodTimeMethodVisitor(api, mv);
             }
             return mv;
