@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.example'
+version = '0.1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // asm dependencies
+    implementation 'org.ow2.asm:asm:9.2'
+    implementation 'org.ow2.asm:asm-commons:9.2'
+
+    
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Premain-Class': 'com.example.MethodTimeAgent',
+                'Can-Redefine-Classes': 'true'
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
